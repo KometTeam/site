@@ -140,7 +140,6 @@ const Features: React.FC = () => {
   const handleWhiteWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    // extra safety to block page scroll in some browsers
     if (e.nativeEvent && (e.nativeEvent as WheelEvent).cancelable) {
       (e.nativeEvent as WheelEvent).preventDefault();
     }
