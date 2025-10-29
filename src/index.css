@@ -1716,6 +1716,20 @@ body {
     overflow-x: hidden;
     width: 100%;
     max-width: 100%;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  * {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+  }
+  
+  input, textarea, button, a, .nav-link, .download-btn, .floating-btn, .indicator {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   
   .header { position: sticky; top: 0; z-index: 1000; background-color: var(--bg-primary); }
