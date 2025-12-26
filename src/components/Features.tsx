@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import settingsOne from '../screens/settings_one.png';
 import settingsTwo from '../screens/settings_two.png';
@@ -8,6 +8,25 @@ import winIcon from '../win.svg';
 import linuxIcon from '../linux.svg';
 import appleIcon from '../apple.svg';
 import androidIcon from '../android.svg';
+
+// Типы данных
+interface Page {
+  title: string;
+  type: 'single' | 'multiple';
+  images: string[];
+}
+
+interface Platform {
+  name: string;
+  icon: React.ReactNode;
+}
+
+interface FunctionScreen {
+  title: string;
+  description: string;
+  images?: string[];
+  platforms?: Platform[];
+}
 
 const Features: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -30,16 +49,16 @@ const Features: React.FC = () => {
     window.setTimeout(() => setOverlayShown(false), fadeDurationMs + holdMs);
     window.setTimeout(() => setOverlayMounted(false), fadeDurationMs * 2 + holdMs);
   };
-  
-  const pages = [
+
+  const pages = useMemo<Page[]>(() => [
     {
       title: "Настройки безопасности",
       type: "multiple",
       images: [settingsTwo, settingsThree, settingsFour]
     }
-  ];
+  ], []);
 
-  const functionScreens = [
+  const functionScreens = useMemo<FunctionScreen[]>(() => [
     {
       title: "Множество настроек",
       description: "Большое количество настроек, которые помогут вам настроить клиент и обезопасить себя!"
@@ -53,39 +72,39 @@ const Features: React.FC = () => {
       title: "Кроссплатформенность",
       description: "Используйте клиент на любой платформе: Windows, Linux, macOS, Android, iOS",
       platforms: [
-        { 
-          name: "Windows", 
+        {
+          name: "Windows",
           icon: (
-            <img src={winIcon} alt="Windows" width="32" height="32" />
+              <img src={winIcon} alt="Windows" width="32" height="32" />
           )
         },
-        { 
-          name: "Linux", 
+        {
+          name: "Linux",
           icon: (
-            <img src={linuxIcon} alt="Linux" width="32" height="32" />
+              <img src={linuxIcon} alt="Linux" width="32" height="32" />
           )
         },
-        { 
-          name: "macOS", 
+        {
+          name: "macOS",
           icon: (
-            <img src={appleIcon} alt="macOS" width="32" height="32" />
+              <img src={appleIcon} alt="macOS" width="32" height="32" />
           )
         },
-        { 
-          name: "Android", 
+        {
+          name: "Android",
           icon: (
-            <img src={androidIcon} alt="Android" width="32" height="32" />
+              <img src={androidIcon} alt="Android" width="32" height="32" />
           )
         },
-        { 
-          name: "iOS", 
+        {
+          name: "iOS",
           icon: (
-            <img src={appleIcon} alt="iOS" width="32" height="32" />
+              <img src={appleIcon} alt="iOS" width="32" height="32" />
           )
         }
       ]
     }
-  ];
+  ], []);
 
   const nextPage = () => {
     setCurrentPage((prev) => (prev + 1) % pages.length);
@@ -178,199 +197,203 @@ const Features: React.FC = () => {
     };
   }, [currentFunctionScreen]);
 
+  // Безопасный доступ к текущему экрану функции
+  const currentFunction = functionScreens[currentFunctionScreen];
+  const currentPageData = pages[currentPage];
+
   return (
-    <section id="features" className="features">
-      <div className="container">
-        <div className="features-layout">
-          <div className="features-left">
-            <div className={`features-content ${isTransitioning ? 'transitioning' : ''}`}>
-              <h2 className="features-title">{functionScreens[currentFunctionScreen].title}</h2>
-              <p className="features-description" dangerouslySetInnerHTML={{ __html: functionScreens[currentFunctionScreen].description }}>
-              </p>              
-            </div>
-            <div className="features-indicators">
-              {functionScreens.map((_, index) => (
-                <div 
-                  key={index}
-                  className={`indicator ${index === currentFunctionScreen ? 'active' : ''}`}
-                  onClick={() => handleFunctionScreenChange(index)}
-                ></div>
-              ))}
-            </div>
-          </div>
-
-          
-          <div className="empty-space-button">
-            <button className="floating-btn" title="Больше настроек" onClick={triggerOverlay}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="6,9 12,15 18,9"></polyline>
-              </svg>
-            </button>
-          </div>
-
-          <div className="features-right">
-            {currentFunctionScreen === 2 ? (
-              <div className="white-screen-plain" onWheel={handleWhiteWheel}>
-                <div className="platform-logo-holder">
-                  <img
-                    key={platformIndex}
-                    src={platformLogos[platformIndex]}
-                    alt="platform"
-                    className={`platform-logo-fader ${platformVisible ? 'show' : ''}`}
-                    width={100}
-                    height={100}
-                  />
-                </div>
+      <section id="features" className="features">
+        <div className="container">
+          <div className="features-layout">
+            <div className="features-left">
+              <div className={`features-content ${isTransitioning ? 'transitioning' : ''}`}>
+                <h2 className="features-title">{currentFunction?.title}</h2>
+                <p className="features-description" dangerouslySetInnerHTML={{ __html: currentFunction?.description || '' }}>
+                </p>
               </div>
-            ) : (
-              <div className="white-screen" onWheel={handleWhiteWheel}>
-                <h3 className="white-screen-title">{functionScreens[currentFunctionScreen].title}</h3>
-                {currentFunctionScreen === 1 && (
-                  <div className="white-screen-additional-text">
-                    <div className="security-images-stack">
-                      <div className="security-images-container">
-                      {[settingsTwo, settingsThree].map((image, index) => {
-                        console.log(`Security image ${index}:`, image);
-                        const isActive = index === currentSecurityImage;
-                        const isNext = index === (currentSecurityImage + 1) % 2;
-                        const isPrev = index === (currentSecurityImage - 1 + 2) % 2;
-                        
-                        let style: React.CSSProperties = {};
-                        
-                        if (isActive) {
-                          style = {
-                            zIndex: 10,
-                            transform: 'translateX(0) rotate(0deg)',
-                            opacity: 1
-                          };
-                        } else if (isNext) {
-                          style = {
-                            zIndex: 5,
-                            transform: 'translateX(20px) rotate(5deg)',
-                            opacity: 0.7
-                          };
-                        } else if (isPrev) {
-                          style = {
-                            zIndex: 5,
-                            transform: 'translateX(-20px) rotate(-5deg)',
-                            opacity: 0.7
-                          };
-                        }
-                        
-                        return (
-                          <img 
-                            key={index}
-                            src={image} 
-                            alt={`Настройки безопасности ${index + 1}`} 
-                            className="security-image-card" 
-                            style={style}
-                          />
-                        );
-                      })}
-                      </div>
+              <div className="features-indicators">
+                {functionScreens.map((_, index) => (
+                    <div
+                        key={index}
+                        className={`indicator ${index === currentFunctionScreen ? 'active' : ''}`}
+                        onClick={() => handleFunctionScreenChange(index)}
+                    ></div>
+                ))}
+              </div>
+            </div>
+
+
+            <div className="empty-space-button">
+              <button className="floating-btn" title="Больше настроек" onClick={triggerOverlay}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6,9 12,15 18,9"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div className="features-right">
+              {currentFunctionScreen === 2 ? (
+                  <div className="white-screen-plain" onWheel={handleWhiteWheel}>
+                    <div className="platform-logo-holder">
+                      <img
+                          key={platformIndex}
+                          src={platformLogos[platformIndex]}
+                          alt="platform"
+                          className={`platform-logo-fader ${platformVisible ? 'show' : ''}`}
+                          width={100}
+                          height={100}
+                      />
                     </div>
                   </div>
-                )}
-              {currentFunctionScreen !== 1 && currentFunctionScreen !== 2 && (
-                <div className="carousel-container" ref={carouselRef}>
-                  <div className="carousel-track" style={{ transform: `translateX(-${currentPage * 100}%)` }}>
-                    {pages.map((page, pageIndex) => (
-                      <div key={pageIndex} className="carousel-slide">
-                        {page.type === "single" ? (
-                          <div className="single-image-container">
-                            <img src={page.image} alt={page.title} className="settings-image single" />
+              ) : (
+                  <div className="white-screen" onWheel={handleWhiteWheel}>
+                    <h3 className="white-screen-title">{currentFunction?.title}</h3>
+                    {currentFunctionScreen === 1 && (
+                        <div className="white-screen-additional-text">
+                          <div className="security-images-stack">
+                            <div className="security-images-container">
+                              {[settingsTwo, settingsThree].map((image, index) => {
+                                console.log(`Security image ${index}:`, image);
+                                const isActive = index === currentSecurityImage;
+                                const isNext = index === (currentSecurityImage + 1) % 2;
+                                const isPrev = index === (currentSecurityImage - 1 + 2) % 2;
+
+                                let style: React.CSSProperties = {};
+
+                                if (isActive) {
+                                  style = {
+                                    zIndex: 10,
+                                    transform: 'translateX(0) rotate(0deg)',
+                                    opacity: 1
+                                  };
+                                } else if (isNext) {
+                                  style = {
+                                    zIndex: 5,
+                                    transform: 'translateX(20px) rotate(5deg)',
+                                    opacity: 0.7
+                                  };
+                                } else if (isPrev) {
+                                  style = {
+                                    zIndex: 5,
+                                    transform: 'translateX(-20px) rotate(-5deg)',
+                                    opacity: 0.7
+                                  };
+                                }
+
+                                return (
+                                    <img
+                                        key={index}
+                                        src={image}
+                                        alt={`Настройки безопасности ${index + 1}`}
+                                        className="security-image-card"
+                                        style={style}
+                                    />
+                                );
+                              })}
+                            </div>
                           </div>
-                        ) : (
-                          <div className="multiple-images">
-                            {page.images.map((image, imgIndex) => {
-                              const isActive = imgIndex === currentImageIndex;
-                              const isAbove = imgIndex > currentImageIndex;
-                              const isBelow = imgIndex < currentImageIndex;
-                              
-                              let style: React.CSSProperties = {};
-                              
-                              if (isActive) {
-                                style = {
-                                  zIndex: 10,
-                                  transform: 'translateY(0) rotate(0deg)',
-                                  opacity: 1
-                                };
-                              } else if (isAbove) {
-                                const offset = (imgIndex - currentImageIndex) * 20;
-                                const rotation = (imgIndex - currentImageIndex) * 5;
-                                style = {
-                                  zIndex: 5 - (imgIndex - currentImageIndex),
-                                  transform: `translateY(-${offset}px) rotate(${rotation}deg)`,
-                                  opacity: Math.max(0.3, 1 - (imgIndex - currentImageIndex) * 0.2)
-                                };
-                              } else if (isBelow) {
-                                const offset = (currentImageIndex - imgIndex) * 20;
-                                const rotation = (currentImageIndex - imgIndex) * -5;
-                                style = {
-                                  zIndex: 5 - (currentImageIndex - imgIndex),
-                                  transform: `translateY(${offset}px) rotate(${rotation}deg)`,
-                                  opacity: Math.max(0.3, 1 - (currentImageIndex - imgIndex) * 0.2)
-                                };
-                              }
-                              
-                              return (
-                                <img 
-                                  key={imgIndex} 
-                                  src={image} 
-                                  alt={`Настройка ${imgIndex + 1}`} 
-                                  className="settings-image multiple" 
-                                  style={style}
-                                />
-                              );
-                            })}
+                        </div>
+                    )}
+                    {currentFunctionScreen !== 1 && currentFunctionScreen !== 2 && (
+                        <div className="carousel-container" ref={carouselRef}>
+                          <div className="carousel-track" style={{ transform: `translateX(-${currentPage * 100}%)` }}>
+                            {pages.map((page, pageIndex) => (
+                                <div key={pageIndex} className="carousel-slide">
+                                  {page.type === "single" ? (
+                                      <div className="single-image-container">
+                                        <img src={page.images[0]} alt={page.title} className="settings-image single" />
+                                      </div>
+                                  ) : (
+                                      <div className="multiple-images">
+                                        {page.images.map((image, imgIndex) => {
+                                          const isActive = imgIndex === currentImageIndex;
+                                          const isAbove = imgIndex > currentImageIndex;
+                                          const isBelow = imgIndex < currentImageIndex;
+
+                                          let style: React.CSSProperties = {};
+
+                                          if (isActive) {
+                                            style = {
+                                              zIndex: 10,
+                                              transform: 'translateY(0) rotate(0deg)',
+                                              opacity: 1
+                                            };
+                                          } else if (isAbove) {
+                                            const offset = (imgIndex - currentImageIndex) * 20;
+                                            const rotation = (imgIndex - currentImageIndex) * 5;
+                                            style = {
+                                              zIndex: 5 - (imgIndex - currentImageIndex),
+                                              transform: `translateY(-${offset}px) rotate(${rotation}deg)`,
+                                              opacity: Math.max(0.3, 1 - (imgIndex - currentImageIndex) * 0.2)
+                                            };
+                                          } else if (isBelow) {
+                                            const offset = (currentImageIndex - imgIndex) * 20;
+                                            const rotation = (currentImageIndex - imgIndex) * -5;
+                                            style = {
+                                              zIndex: 5 - (currentImageIndex - imgIndex),
+                                              transform: `translateY(${offset}px) rotate(${rotation}deg)`,
+                                              opacity: Math.max(0.3, 1 - (currentImageIndex - imgIndex) * 0.2)
+                                            };
+                                          }
+
+                                          return (
+                                              <img
+                                                  key={imgIndex}
+                                                  src={image}
+                                                  alt={`Настройка ${imgIndex + 1}`}
+                                                  className="settings-image multiple"
+                                                  style={style}
+                                              />
+                                          );
+                                        })}
+                                      </div>
+                                  )}
+                                </div>
+                            ))}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                        </div>
+                    )}
+                    {currentFunctionScreen !== 1 && (
+                        <div className="image-indicators">
+                          {currentPage === 0 ? (
+                              pages.map((_, index) => (
+                                  <button
+                                      key={index}
+                                      className={`indicator ${index === currentPage ? 'active' : ''}`}
+                                      onClick={() => setCurrentPage(index)}
+                                  />
+                              ))
+                          ) : (
+                              pages[0]?.images.map((_, index) => (
+                                  <button
+                                      key={index}
+                                      className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                                      onClick={() => setCurrentImageIndex(index)}
+                                  />
+                              ))
+                          )}
+                        </div>
+                    )}
                   </div>
-                </div>
               )}
-              {currentFunctionScreen !== 1 && (
-                <div className="image-indicators">
-                  {currentPage === 0 ? (
-                    pages.map((_, index) => (
-                      <button
-                        key={index}
-                        className={`indicator ${index === currentPage ? 'active' : ''}`}
-                        onClick={() => setCurrentPage(index)}
-                      />
-                    ))
-                  ) : (
-                    pages[0].images.map((_, index) => (
-                      <button
-                        key={index}
-                        className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
-                        onClick={() => setCurrentImageIndex(index)}
-                      />
-                    ))
-                  )}
-                </div>
-              )}
-              </div>
-            )}
-        </div>
-        {overlayMounted ? createPortal(
-          (
-            <div 
-              className={`overlay ${overlayShown ? 'show' : ''}`}
-              onClick={() => {
-                setOverlayShown(false);
-                window.setTimeout(() => setOverlayMounted(false), 300);
-              }}
-            >
-              <div className="overlay-message">В разработке</div>
             </div>
-          ),
-          document.body
-        ) : null}
+            {overlayMounted ? createPortal(
+                (
+                    <div
+                        className={`overlay ${overlayShown ? 'show' : ''}`}
+                        onClick={() => {
+                          setOverlayShown(false);
+                          window.setTimeout(() => setOverlayMounted(false), 300);
+                        }}
+                    >
+                      <div className="overlay-message">В разработке</div>
+                    </div>
+                ),
+                document.body
+            ) : null}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 };
 
