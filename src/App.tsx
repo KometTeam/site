@@ -76,6 +76,8 @@ const LazyAvatar = ({ src, alt, name }: LazyAvatarProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [isInView, setIsInView] = useState(false);
+    const [resolvedSrc, setResolvedSrc] = useState<string>(src);
+    const containerRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
 
     useEffect(() => {
@@ -90,12 +92,42 @@ const LazyAvatar = ({ src, alt, name }: LazyAvatarProps) => {
             { threshold: INTERSECTION_THRESHOLD, rootMargin: '100px' }
         );
 
-        if (imgRef.current) {
-            observer.observe(imgRef.current);
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
         }
 
         return () => observer.disconnect();
     }, []);
+
+    // When in view: use cached data URL if present, otherwise use direct URL.
+    // After load, warm the cache in background without blocking the UI.
+    useEffect(() => {
+        if (!isInView) return;
+        const key = `imgcache:${encodeURIComponent(src)}`;
+        const maxAgeMs = 24 * 60 * 60 * 1000; // 24h
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                const { ts, dataUrl } = JSON.parse(raw) as { ts: number; dataUrl: string };
+                if (Date.now() - ts < maxAgeMs && dataUrl) {
+                    setResolvedSrc(dataUrl);
+                } else {
+                    setResolvedSrc(src);
+                }
+            } else {
+                setResolvedSrc(src);
+            }
+        } catch {
+            setResolvedSrc(src);
+        }
+        // Warm cache in background (do not update src to avoid flicker)
+        (async () => {
+            try {
+                const { getCachedImageDataUrl } = await import('./utils/imageCache');
+                await getCachedImageDataUrl(src, maxAgeMs);
+            } catch {}
+        })();
+    }, [isInView, src]);
 
     const getInitials = useCallback((nameStr: string) => {
         return nameStr.charAt(0).toUpperCase();
@@ -108,6 +140,7 @@ const LazyAvatar = ({ src, alt, name }: LazyAvatarProps) => {
     if (!isInView) {
         return (
             <div
+                ref={containerRef}
                 className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-800 animate-pulse mb-4 sm:mb-6 flex-shrink-0"
                 role="img"
                 aria-label={`Загрузка аватара ${name}`}
@@ -129,14 +162,21 @@ const LazyAvatar = ({ src, alt, name }: LazyAvatarProps) => {
             {/* Основное изображение */}
             <img
                 ref={imgRef}
-                src={src}
+                src={resolvedSrc}
                 alt={alt}
+                referrerPolicy="no-referrer"
+                decoding="async"
                 className={`w-full h-full rounded-full object-cover transition-all duration-500 ${
                     isLoaded ? 'opacity-100 scale-100' : 'opacity-0'
                 }`}
-                onLoad={() => {
+                onLoad={async () => {
                     setIsLoaded(true);
                     setHasError(false);
+                    // After a successful load, ensure it's cached for next time
+                    try {
+                        const { getCachedImageDataUrl } = await import('./utils/imageCache');
+                        await getCachedImageDataUrl(src, 24 * 60 * 60 * 1000);
+                    } catch {}
                 }}
                 onError={() => {
                     setHasError(true);
@@ -717,13 +757,13 @@ const Team = () => {
     }, []);
     // в этом списске есть все. в нем только нет. меня.... (мем) актуализировать список. думаю подтягивать с страницы команды на гитхабе.
     const teamMembers = useMemo(() => [
-        { name: 'Klocky', role: 'Founder & Lead', avatar: klockyAvatar, color: 'bg-purple-500' },
-        { name: 'Floppy', role: 'Project Manager', avatar: floppyAvatar, color: 'bg-indigo-500' },
-        { name: 'Nxzn', role: 'Web & Client', avatar: nxznAvatar, color: 'bg-blue-500' },
-        { name: 'Mixott', role: 'Backend API', avatar: mixottAvatar, color: 'bg-teal-500' },
-        { name: 'Ink', role: 'Research', avatar: inkAvatar, color: 'bg-rose-500' },
-        { name: 'Kilobyte', role: 'Frontend', avatar: kilobyteAvatar, color: 'bg-orange-500' },
-        { name: 'Jganenok', role: 'Fullstack', avatar: jganenokAvatar, color: 'bg-cyan-500' },
+        { name: 'Клоки пидор', role: 'Founder & Lead', avatar: 'https://t.me/i/userpic/320/klockky.jpg', color: 'bg-purple-500' },
+        { name: 'Станислав', role: 'Хуй бумажный', avatar: 'https://t.me/i/userpic/320/s_mohov.jpg', color: 'bg-indigo-500' },
+        { name: 'Noxzion', role: 'нихуя не делает', avatar: 'https://t.me/i/userpic/320/nxznd.jpg', color: 'bg-blue-500' },
+        { name: 'Mixott', role: 'В хл играет', avatar: 'https://t.me/i/userpic/320/mexottorego.jpg', color: 'bg-teal-500' },
+        { name: 'Ink', role: 'тоже хуи пинает', avatar: 'https://t.me/i/userpic/320/observerless.jpg', color: 'bg-rose-500' },
+        { name: 'Kilobyte', role: 'в прайме', avatar: 'https://t.me/i/userpic/320/ROikkrl0237.jpg', color: 'bg-orange-500' },
+        { name: 'Jganenok', role: 'Я ебу чтоли ', avatar: 'https://t.me/i/userpic/320/JgSql.jpg', color: 'bg-cyan-500' },
     ], []);
 
     return (
