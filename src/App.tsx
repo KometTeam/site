@@ -1053,7 +1053,7 @@ const Footer = () => {
 
                 {/* Copyright */}
                 <div className="mt-6 sm:mt-8 lg:mt-10 text-gray-600 text-xs sm:text-sm">
-                    © {currentYear} TeamKomet - слишком ахуенные для этого мира (сдохнем нахуй от переработок), а ещё клоки пидор.
+                    © {currentYear} TeamGomet - слишком ахуенные для этого мира (сдохнем нахуй от переработок), а ещё клоки пидор.
                 </div>
             </div>
         </footer>
