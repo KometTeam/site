@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import DownloadSection from './components/DownloadSection';
 
 // Статические импорты ассетов (нихуя не работают)
 import klockyAvatar from './pfps/klocky.png';
@@ -348,9 +349,9 @@ const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
                 <a href="#" className="flex items-center gap-3 cursor-pointer group">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center shadow-lg group-hover:shadow-white/20 transition-all duration-300 group-hover:scale-105 active:scale-95">
-                        <span className="text-black font-bold text-lg sm:text-xl">K</span>
+                        <span className="text-black font-bold text-lg sm:text-xl">G</span>
                     </div>
-                    <span className="text-lg sm:text-xl font-bold tracking-tight text-white">Komet</span>
+                    <span className="text-lg sm:text-xl font-bold tracking-tight text-white">Gomet</span>
                 </a>
 
                 <nav className="hidden md:flex items-center gap-8">
@@ -497,7 +498,7 @@ const Hero = () => {
                 <p className={`text-sm sm:text-base md:text-lg text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed ${
                     isLoaded ? 'animate-fade-in-up' : 'opacity-0'
                 }`} style={{ animationDelay: '0.3s' }}>
-                    Komet - это экспериментальный клиент с упором на приватность.
+                    Gomet - это экспериментальный клиент с упором на приватность.
                     Полностью написан с нуля для вас.
                 </p>
 
@@ -738,7 +739,7 @@ const Team = () => {
                 <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 lg:mb-16 transition-all duration-500 ${
                     isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
                 }`}>
-                    Команда <span className="text-gray-500">Komet</span>
+                    Команда <span className="text-gray-500">Gomet</span>
                 </h2>
 
                 {/* короче типа пиздатый дизайн карточек участинков команды. */}
@@ -793,15 +794,15 @@ const FAQ = () => {
 
     const faqs = useMemo(() => [
         {
-            question: "Безопасен ли Komet?",
-            answer: "Komet - это приватность по умолчанию. Мы не используем внешнюю аналитику и не собираем ваши данные. Однако риски со стороны инфраструктуры MAX сохраняются. Мы уже работаем над внедрением шифрования, чтобы сделать ваше общение в Komet полностью защищенным."
+            question: "Безопасен ли Gomet?",
+            answer: "Gomet - это приватность по умолчанию. Мы не используем внешнюю аналитику и не собираем ваши данные. Однако риски со стороны инфраструктуры MAX сохраняются. Мы уже работаем над внедрением шифрования, чтобы сделать ваше общение в Gomet полностью защищенным."
         },
         {
-            question: "На каких платформах работает Komet?",
-            answer: "Komet поддерживает Windows, macOS, Linux, Android и iOS. Мы стремимся обеспечить единый опыт использования на всех устройствах."
+            question: "На каких платформах работает Gomet?",
+            answer: "Gomet поддерживает Windows, macOS, Linux, Android и iOS. Мы стремимся обеспечить единый опыт использования на всех устройствах."
         },
         {
-            question: "Как установить Komet?",
+            question: "Как установить Gomet?",
             answer: "Скачайте APK-файл для Android с нашего Telegram-канала или дождитесь выхода в RuStore. Для десктопных версий следуйте инструкциям на странице загрузки."
         },
         {
@@ -866,10 +867,40 @@ const FAQ = () => {
     );
 };
 
-// скачат
-const DownloadSection = () => {
+const DownloadSectionLegacy = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const downloadRef = useRef<HTMLDivElement>(null);
+    // Auto-detect desktop OS and prepare download URLs
+    const [desktopOS, setDesktopOS] = useState<'windows' | 'linux' | 'other'>('other');
+    const WINDOWS_URL = 'https://resources.komet-app.ru/versions/v0.4.1/Komet-Windows';
+    const LINUX_URL = 'https://resources.komet-app.ru/versions/v0.4.1/Komet-Linux';
+    const ANDROID_URL = 'https://resources.komet-app.ru/versions/v0.4.1/Komet-universal.apk';
+    const IOS_URL = 'https://resources.komet-app.ru/versions/v0.4.1/Komet-iOS.ipa';
+    const [mobileOS, setMobileOS] = useState<'android' | 'ios' | 'other'>('other');
+
+    useEffect(() => {
+        if (typeof navigator === 'undefined') return;
+        const uaFull = (navigator.userAgent || (navigator as any).vendor || (window as any).opera || '').toLowerCase();
+        const platform = (navigator.platform || '').toLowerCase();
+
+        // Mobile OS detection
+        if (uaFull.includes('android')) {
+            setMobileOS('android');
+        } else if (/(iphone|ipad|ipod)/.test(uaFull)) {
+            setMobileOS('ios');
+        } else {
+            setMobileOS('other');
+        }
+
+        // Desktop OS detection
+        if (uaFull.includes('windows') || platform.includes('win')) {
+            setDesktopOS('windows');
+        } else if (uaFull.includes('linux') || platform.includes('linux')) {
+            setDesktopOS('linux');
+        } else {
+            setDesktopOS('other');
+        }
+    }, []);
 
     useEffect(() => {
         setIsLoaded(true);
@@ -892,18 +923,48 @@ const DownloadSection = () => {
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 sm:mb-12 lg:mb-16">Готовы начать?</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-                    {/* Android Card */}
                     <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl flex flex-col items-center transition-all duration-300 group hover:bg-white/5 hover:border-white/20 hover:-translate-y-1">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-white/5 rounded-xl lg:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 text-white transition-colors group-hover:bg-white group-hover:text-black">
                             <Smartphone size={24} className="sm:hidden" />
                             <Smartphone size={28} className="hidden sm:block" />
                         </div>
-                        <h3 className="text-lg sm:text-xl font-bold mb-2">Android</h3>
-                        <p className="text-gray-500 mb-4 sm:mb-5 lg:mb-6 text-sm">Версия 0.4.0 beta</p>
-                        <button className="w-full py-3 rounded-xl bg-white/10 hover:bg-white hover:text-black font-semibold transition-all active:scale-98">
-                            Скачать APK
-                        </button>
+                        <h3 className="text-lg sm:text-xl font-bold mb-2">
+                            {mobileOS === 'android' && 'Android'}
+                            {mobileOS === 'ios' && 'iOS'}
+                            {mobileOS === 'other' && 'Android & iOS'}
+                        </h3>
+                        <p className="text-gray-500 mb-4 sm:mb-5 lg:mb-6 text-sm">Версия 0.4.1</p>
+                        <a
+                            href={mobileOS === 'android' ? ANDROID_URL : mobileOS === 'ios' ? IOS_URL : ANDROID_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full text-center py-3 rounded-xl bg-white/10 hover:bg-white hover:text-black font-semibold transition-all active:scale-98"
+                        >
+                            {mobileOS === 'android' && 'Скачать APK'}
+                            {mobileOS === 'ios' && 'Скачать IPA'}
+                            {mobileOS === 'other' && 'Скачать APK'}
+                        </a>
                     </div>
+
+                    {false && (
+                    <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl flex flex-col items-center transition-all duration-300 group hover:bg-white/5 hover:border-white/20 hover:-translate-y-1">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-white/5 rounded-xl lg:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 text-white transition-colors group-hover:bg-white group-hover:text-black">
+                            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' className='w-6 h-6 sm:w-7 sm:h-7'>
+                                <path d='M16.365 1.43c-.99.058-2.162.7-2.86 1.52-.626.732-1.151 1.834-.948 2.915 1.097.083 2.223-.588 2.89-1.415.633-.79 1.122-1.878.918-3.02zM20.44 16.38c-.045-.09-2.058-1.145-2.103-3.416-.02-1.78 1.38-2.634 1.44-2.67-.79-1.156-2.017-1.314-2.457-1.33-1.046-.105-2.05.61-2.582.61-.54 0-1.35-.598-2.275-.58-1.172.018-2.257.682-2.86 1.734-1.22 2.112-.31 5.226.86 6.936.57.825 1.248 1.75 2.147 1.72.86-.035 1.188-.56 2.23-.56 1.023 0 1.33.56 2.254.54.93-.018 1.523-.84 2.09-1.67.64-.944.91-1.87.906-1.9z' />
+                            </svg>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold mb-2">iOS</h3>
+                        <p className="text-gray-500 mb-4 sm:mb-5 lg:mb-6 text-sm">Версия 0.4.1</p>
+                        <a
+                            href="https://resources.komet-app.ru/versions/v0.4.1/Komet-iOS.ipa"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full text-center py-3 rounded-xl bg-white/10 hover:bg-white hover:text-black font-semibold transition-all active:scale-98"
+                        >
+                            Скачать IPA
+                        </a>
+                    </div>
+                    )}
 
                     {/* типо красиво оформляем*/}
                     <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl flex flex-col items-center border-indigo-500/30 hover:border-indigo-500/60 shadow-[0_0_50px_rgba(79,70,229,0.1)] hover:shadow-[0_0_70px_rgba(79,70,229,0.2)] transition-all transform hover:-translate-y-1 relative z-10">
@@ -925,16 +986,27 @@ const DownloadSection = () => {
                     </div>
 
                     {/* Desktop Card */}
-                    <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl flex flex-col items-center transition-all duration-300 group opacity-60 hover:opacity-100">
+                    <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl flex flex-col items-center transition-all duration-300 group hover:bg-white/5 hover:border-white/20 hover:-translate-y-1">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-white/5 rounded-xl lg:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 text-white transition-colors">
                             <Monitor size={24} className="sm:hidden" />
                             <Monitor size={28} className="hidden sm:block" />
                         </div>
                         <h3 className="text-lg sm:text-xl font-bold mb-2">Desktop</h3>
-                        <p className="text-gray-500 mb-4 sm:mb-5 lg:mb-6 text-sm">Windows & Linux</p>
-                        <button disabled className="w-full py-3 rounded-xl border border-white/10 text-gray-500 font-semibold cursor-not-allowed">
-                            Скоро
-                        </button>
+                        <p className="text-gray-500 mb-4 sm:mb-5 lg:mb-6 text-sm">
+                            {desktopOS === 'windows' && 'Windows'}
+                            {desktopOS === 'linux' && 'Linux'}
+                            {desktopOS === 'other' && 'Windows & Linux'}
+                        </p>
+                        <a
+                            href={desktopOS === 'windows' ? WINDOWS_URL : desktopOS === 'linux' ? LINUX_URL : WINDOWS_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full text-center py-3 rounded-xl bg-white/10 hover:bg-white hover:text-black font-semibold transition-all active:scale-98"
+                        >
+                            {desktopOS === 'windows' && 'Скачать для Windows'}
+                            {desktopOS === 'linux' && 'Скачать для Linux'}
+                            {desktopOS === 'other' && 'Скачать для Windows'}
+                        </a>
                     </div>
                 </div>
             </div>
@@ -942,7 +1014,6 @@ const DownloadSection = () => {
     );
 };
 
-// --- онли факты ---
 const Footer = () => {
     const currentYear = new Date().getFullYear();
 
@@ -982,7 +1053,7 @@ const Footer = () => {
 
                 {/* Copyright */}
                 <div className="mt-6 sm:mt-8 lg:mt-10 text-gray-600 text-xs sm:text-sm">
-                    © {currentYear} TeamKomet - слишком ахуенные для этого мира (сдохнем нахуй от переработок)
+                    © {currentYear} TeamKomet - слишком ахуенные для этого мира (сдохнем нахуй от переработок), а ещё клоки пидор.
                 </div>
             </div>
         </footer>
